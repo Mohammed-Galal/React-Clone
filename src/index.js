@@ -3,7 +3,7 @@ import {
   useLayoutEffect,
   usePatch,
   useState,
-} from "./package/index.js";
+} from "../package/index.js";
 
 const temp = Array(4)
   .fill()
