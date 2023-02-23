@@ -1,6 +1,6 @@
 import $ from "./utils/nodeMethods.js";
 import resolveComponent from "./client/index.js";
-import rootContainer from "../index.js";
+import rootContainer from "../src/index.js";
 ("use strict");
 
 export { initHook, useHook, usePatch } from "./hooks.js";
