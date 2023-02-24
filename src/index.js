@@ -14,7 +14,7 @@ const temp = Array(4)
     dom: ["a", ["href={0}"], ["some temp Link", 0]],
   }));
 
-export default {
+export default () => ({
   key: 0,
   scripts: ["test", "world"],
   components: [child, Test, N],
@@ -29,7 +29,7 @@ export default {
       ["span", [], [1]],
     ],
   ],
-};
+});
 
 function Test({ someAttr }) {
   const [x, setX] = useState(1);
@@ -37,6 +37,10 @@ function Test({ someAttr }) {
   function resetState() {
     setX(x + 1);
   }
+
+  useEffect(function () {
+    console.log("EFFECT");
+  }, []);
 
   return x > 7
     ? {

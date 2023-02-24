@@ -9,4 +9,5 @@ export * from "./defaultHooks.js";
 const body = document.body,
   append = $(body).append;
 body.innerHTML = "";
+
 new Promise((res) => res(resolveComponent(rootContainer))).then(append);

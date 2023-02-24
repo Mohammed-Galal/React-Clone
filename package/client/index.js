@@ -13,21 +13,78 @@ import {
   isArray,
 } from "../utils/constants.js";
 
+export default resolveComponent;
+
 const { addListener, check, useClues } = new Clues(JSON.stringify({ id: 1 }));
 
-export default resolveComponent;
+const scriptNodeExp = /String|Number/,
+  Context = function (ctx) {
+    this.cachedRoots = new Map();
+    this.scripts = ctx.scripts.map(reShapeScript);
+    this.components = ctx.components;
+    this.dom = this.resolveDOM(ctx.dom);
+  },
+  proto = Context.prototype;
+
+proto.resolveDOM = function (dom) {
+  const typeOfDom = dom.constructor.name,
+    self = this,
+    scripts = self.scripts;
+
+  if (scriptNodeExp.test(typeOfDom))
+    return resolveNode(dom, scripts, resolveChildren);
+
+  const tag = dom[0],
+    attrs = (dom[1] = parseAttrs(dom[1])),
+    children = dom[2];
+
+  if (tag === "fragment") return children.map(resolveDOM);
+  else if (isNum(tag)) {
+    const components = self.components;
+    if (children) attrs.Children = children.map(resolveDOM);
+    return resolveComponent(components[tag], attrs, scripts);
+  } else return resolveElement(dom, scripts, resolveDOM);
+
+  function resolveDOM(c) {
+    return self.resolveDOM(c);
+  }
+
+  function resolveChildren(value) {
+    if (isArray(value)) return value.map(resolveChildren);
+    return self.resolveChildren(value);
+  }
+};
+
+proto.resolveChildren = function resolveChildren(value) {
+  if (value.cacheAs === undefined) return new Context(value).dom;
+  const roots = this.cachedRoots,
+    key = value.cacheAs;
+  roots.has(key)
+    ? roots.get(key).updateScripts(value.scripts)
+    : roots.set(key, new Context(value));
+  return roots.get(key).dom;
+};
+
+proto.updateScripts = function (newScripts) {
+  const oldScripts = this.scripts;
+  if (oldScripts === newScripts) return;
+  newScripts.forEach(function (item, ind) {
+    const oldScript = oldScripts[ind];
+    if (item === oldScript.value) return;
+    oldScript.value = item;
+    oldScript.deps.forEach((fn) => fn());
+  });
+};
+
 function resolveComponent(component, props, scripts) {
-  const typeOfComponent = component.constructor.name;
+  if (isArray(component)) return component;
 
-  if (typeOfComponent === "Array") return component;
-  else if (typeOfComponent === "Object") return new Context(component).dom;
-
-  let updateLocked = false,
+  let updateEnabled = true,
     currentEl = null;
 
   const cached = new Map(),
     refreshComponent = function (newCtx) {
-      if (updateLocked) return currentEl.self;
+      if (updateEnabled === false) return currentEl.self;
       const key = newCtx.key;
       cached.has(key)
         ? cached.get(key).updateScripts(newCtx.scripts)
@@ -51,11 +108,11 @@ function resolveComponent(component, props, scripts) {
         const isMatched = check(clues),
           result = isMatched ? runConnection() : placeHolder;
         currentEl.replaceWith(result);
-        updateLocked != isMatched;
+        updateEnabled = isMatched;
       });
 
-      updateLocked != check(clues);
-      if (updateLocked) {
+      updateEnabled = check(clues);
+      if (!updateEnabled) {
         currentEl = $(placeHolder);
         return placeHolder;
       }
@@ -84,46 +141,8 @@ function resolveComponent(component, props, scripts) {
   return runConnection();
 }
 
-const proto = Context.prototype;
-function Context(ctx) {
-  this.cachedRoots = new Map();
-  this.scripts = ctx.scripts.map(reShapeScript);
-  this.components = ctx.components;
-  this.dom = this.resolveDOM(ctx.dom);
-}
-
-proto.updateScripts = function (newScripts) {
-  const oldScripts = this.scripts;
-  if (oldScripts === newScripts) return;
-  newScripts.forEach(function (item, ind) {
-    const oldScript = oldScripts[ind];
-    if (item === oldScript.value) return;
-    oldScript.value = item;
-    oldScript.deps.forEach((fn) => fn());
-  });
-};
-
-proto.resolveDOM = function resolveDOM(dom) {
-  const self = this;
-  if (typeCheck(dom, "String | Number")) return self.resolveNode(dom);
-  else if (dom[0] === "fragment") return dom[2].map(resolveDOM, self);
-  else return self.resolveElement(dom);
-};
-
-proto.resolveElement = function (domArr) {
-  const scripts = this.scripts,
-    tag = domArr[0],
-    attrs = parseAttrs(domArr[1], scripts),
-    children = domArr[2];
-
-  if (isNum(tag)) {
-    const components = this.components;
-    if (children) attrs.Children = children.map(this.resolveDOM, this);
-    return resolveComponent(components[tag], attrs, scripts);
-  }
-
-  const self = this,
-    attrsKeys = objKeys(attrs),
+function resolveElement([tag, attrs, children], scripts, resolveDOM) {
+  const attrsKeys = objKeys(attrs),
     el = $(document.createElement(tag)),
     on = el.on,
     append = el.append,
@@ -148,18 +167,16 @@ proto.resolveElement = function (domArr) {
       });
     });
 
-    children && append(children.map(self.resolveDOM, self));
+    children && append(children.map(resolveDOM));
   });
 
   return el.self;
-};
+}
 
-proto.resolveNode = function (node) {
+function resolveNode(node, scripts, resolveChildren) {
   if (!isNum(node)) return new Txt(node);
 
-  const self = this,
-    scripts = self.scripts,
-    script = scripts[node];
+  const script = scripts[node];
 
   const placeHolder = new Txt(),
     currentNode = $(getCurrentNode(script.value));
@@ -172,22 +189,11 @@ proto.resolveNode = function (node) {
   }
 
   function getCurrentNode(val) {
-    if (typeCheck(val, "Object | Array")) return self.resolveChildren(val);
+    if (typeCheck(val, "Object | Array")) return resolveChildren(val);
     placeHolder.textContent = val || "";
     return placeHolder;
   }
-};
-
-proto.resolveChildren = function resolveChildren(value) {
-  if (isArray(value)) return value.map(resolveChildren, this);
-  else if (value.cacheAs === undefined) return new Context(value).dom;
-  const roots = this.cachedRoots,
-    key = value.cacheAs;
-  roots.has(key)
-    ? roots.get(key).updateScripts(value.scripts)
-    : roots.set(key, new Context(value));
-  return roots.get(key).dom;
-};
+}
 
 const attrsSplitExp = /(?<=\S+)\=/,
   openScriptsExp = "{";
