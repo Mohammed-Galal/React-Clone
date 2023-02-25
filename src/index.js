@@ -17,8 +17,8 @@ const temp = Array(4)
 export default () => ({
   key: 0,
   scripts: [temp],
-  components: [],
-  dom: ["fragment", ["id={0}", "className={1}"], [0]],
+  components: [N],
+  dom: ["fragment", ["id={0}", "className={1}"], [0, [0, ["clues='id'"]]]],
 });
 
 function Test({ someAttr }) {
@@ -70,6 +70,8 @@ function child({ clues, Children }) {
 
 function N({ clues }) {
   const [id, setId] = clues.id;
+
+  console.log(id);
 
   return {
     key: 2,
