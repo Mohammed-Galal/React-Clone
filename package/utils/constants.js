@@ -1,4 +1,5 @@
 export const emptyObj = {},
+  emptyStr = "",
   Txt = Text,
   Pro = Promise,
   map = Map,

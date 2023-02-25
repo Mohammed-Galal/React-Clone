@@ -3,6 +3,7 @@ export default {
   aside: true,
   style: true,
   div: true,
+  p: true,
   span: true,
   header: true,
   footer: true,

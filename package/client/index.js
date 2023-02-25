@@ -210,7 +210,7 @@ function resolveNode(node, scripts, resolveChildren) {
   }
 }
 
-const attrsSplitExp = /(?<=\S+)\=/,
+const attrsSplitExp = /(?<=^\S+)\=/,
   openScriptsExp = "{";
 function parseAttrs(arr) {
   if (arr === null) return emptyObj;

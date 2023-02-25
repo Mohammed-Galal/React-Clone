@@ -2,10 +2,34 @@ import { isArray, isNodeEnv } from "./constants.js";
 
 export default (function () {
   if (isNodeEnv) {
+    return function (el, domLen) {
+      const attrs = [],
+        children = [],
+        obj = {
+          setAttr(attrExp) {
+            attrs.push(attrExp);
+          },
+          append(child) {
+            isArray(child) ? child.map(obj.append) : children.push(child);
+          },
+          get self() {
+            return (
+              "<" +
+              el +
+              " " +
+              attrs.join(emptyStr) +
+              (domLen > 2 ? ">" + children.join(emptyStr) + "</" + tag : "/") +
+              ">"
+            );
+          },
+        };
+
+      return obj;
+    };
   } else {
     const Events = {
       connect: new Event("connect"),
-      disconnect: new Event("disconnect", { cancelable: true }),
+      disconnect: new Event("disconnect"),
     };
 
     return function $(el) {
