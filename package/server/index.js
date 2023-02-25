@@ -5,7 +5,7 @@ import createConnection from "../hooks.js";
 import {
   objKeys,
   isNum,
-  emptyObj,
+  parseAttrs,
   isArray,
   emptyStr,
 } from "../utils/constants.js";
@@ -112,18 +112,4 @@ function resolveNode(node, scripts, resolveChildren) {
   const val = scripts[node];
   if (typeCheck(val, "Object | Array")) return resolveChildren(val);
   else return val;
-}
-
-const attrsSplitExp = /(?<=^\S+)\=/,
-  openScriptsExp = "{";
-function parseAttrs(arr) {
-  if (arr === null) return emptyObj;
-  const props = {};
-  arr.forEach(function (attr) {
-    const [prop, val] = attr.split(attrsSplitExp),
-      sliced = val.slice(1, -1);
-    props[prop] = val[0] === openScriptsExp ? Number(sliced) : sliced;
-  });
-
-  return props;
 }

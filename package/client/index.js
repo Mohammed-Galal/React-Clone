@@ -8,7 +8,7 @@ import {
   arrayFrom,
   objKeys,
   isNum,
-  emptyObj,
+  parseAttrs,
   defineObjProps,
   isArray,
 } from "../utils/constants.js";
@@ -208,21 +208,6 @@ function resolveNode(node, scripts, resolveChildren) {
     placeHolder.textContent = val || "";
     return placeHolder;
   }
-}
-
-const attrsSplitExp = /(?<=^\S+)\=/,
-  openScriptsExp = "{";
-function parseAttrs(arr) {
-  if (arr === null) return emptyObj;
-  const props = {};
-
-  arr.forEach(function (attr) {
-    const [prop, val] = attr.split(attrsSplitExp),
-      sliced = val.slice(1, -1);
-    props[prop] = val[0] === openScriptsExp ? Number(sliced) : sliced;
-  });
-
-  return props;
 }
 
 function reShapeScript(val) {

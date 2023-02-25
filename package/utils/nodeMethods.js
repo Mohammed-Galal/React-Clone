@@ -6,8 +6,8 @@ export default (function () {
       const attrs = [],
         children = [],
         obj = {
-          setAttr(attrExp) {
-            attrs.push(attrExp);
+          setAttr(attr, val) {
+            attrs.push(attr + "=" + val);
           },
           append(child) {
             isArray(child) ? child.map(obj.append) : children.push(child);
