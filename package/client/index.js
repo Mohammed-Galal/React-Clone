@@ -15,7 +15,9 @@ import {
 
 export default resolveComponent;
 
-const { addListener, check, useClues } = new Clues(JSON.stringify({ id: 1 }));
+const { changeRoute, addListener, check, useClues } = new Clues(
+  JSON.stringify({ id: 1 })
+);
 
 const scriptNodeExp = /String|Number/,
   Context = function (ctx) {
@@ -142,13 +144,26 @@ function resolveComponent(component, props, scripts) {
 }
 
 function resolveElement([tag, attrs, children], scripts, resolveDOM) {
-  const attrsKeys = objKeys(attrs),
-    el = $(document.createElement(tag)),
+  const el = $(document.createElement(tag)),
     on = el.on,
     append = el.append,
     setAttr = el.setAttr;
 
   new Pro(function () {
+    if (tag === "a" && attrs["$:href"] !== undefined) {
+      const ref = attrs["$:href"],
+        isDynaimc = isNum(ref);
+      attrs.href = ref;
+      delete attrs["$:href"];
+
+      on("click", function (e) {
+        e.preventDefault();
+        changeRoute(isDynaimc ? scripts[ref].value : ref);
+      });
+    }
+
+    const attrsKeys = objKeys(attrs);
+
     attrsKeys.forEach(function (attr) {
       const attrValue = attrs[attr];
       if (!isNum(attrValue)) return setAttr(attr, attrValue);

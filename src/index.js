@@ -11,24 +11,14 @@ const temp = Array(4)
     cacheAs: ind,
     scripts: ["/" + ind],
     components: [],
-    dom: ["a", ["href={0}"], ["some temp Link", 0]],
+    dom: ["a", ["$:href={0}"], ["some temp Link", 0]],
   }));
 
 export default () => ({
   key: 0,
-  scripts: ["test", "world"],
-  components: [child, Test, N],
-  dom: [
-    "fragment",
-    ["id={0}", "className={1}"],
-    [
-      "hello",
-      [0, ["clues='id'"], ["this is a child"]],
-      [1, ["someAttr='test'"], ["children"]],
-      [2, ["clues='id'"], []],
-      ["span", [], [1]],
-    ],
-  ],
+  scripts: [temp],
+  components: [],
+  dom: ["fragment", ["id={0}", "className={1}"], [0]],
 });
 
 function Test({ someAttr }) {

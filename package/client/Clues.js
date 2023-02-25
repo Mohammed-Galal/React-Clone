@@ -14,7 +14,13 @@ export default function Clues(json) {
 
   let activeClues = Object.keys(data);
 
-  this.changeRoute = function (str) {};
+  window.addEventListener("popstate", fireListeners);
+
+  this.changeRoute = function (str) {
+    str = str[0] === "/" ? str : window.location.pathname + "/" + str;
+    window.history.pushState("", "", str);
+    fireListeners();
+  };
 
   this.addListener = function (fn) {
     listeners.push(fn);
@@ -38,6 +44,10 @@ export default function Clues(json) {
       });
     }
   };
+
+  function fireListeners() {
+    listeners.forEach((fn) => fn());
+  }
 
   function initStore(clue) {
     if (isArray(clue)) return clue.forEach(initStore);
