@@ -69,14 +69,19 @@ function child({ clues, Children }) {
 }
 
 function N({ clues }) {
-  const [id, setId] = clues.id;
+  const [x, setX] = useState(1000),
+    [id, setId] = clues.id;
 
-  console.log(id);
+  console.log(x);
+
+  function reset() {
+    setX(x + 1);
+  }
 
   return {
     key: 2,
-    scripts: [id],
+    scripts: [id, reset],
     components: [],
-    dom: ["h1", [], ["H!", 0]],
+    dom: ["h1", ["onClick={1}"], ["H!", 0]],
   };
 }
